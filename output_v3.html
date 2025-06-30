@@ -1,0 +1,61 @@
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", Helvetica, Arial, sans-serif; line-height: 1.6; }
+    pre {
+        background-color: #f4f4f4; border: 1px solid #ddd;
+        border-radius: 4px; padding: 16px; overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, 'Courier New', monospace; background-color: #f4f4f4;
+        padding: 2px 4px; border-radius: 3px;
+    }
+    pre code { background-color: transparent; border: none; padding: 0; }
+    blockquote { border-left: 4px solid #ddd; padding-left: 16px; color: #555; }
+    details {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 0.75em 1.5em;
+        margin: 1em 0;
+    }
+    summary {
+        cursor: pointer;
+        font-weight: bold;
+        margin: -0.75em -1.5em;
+        padding: 0.75em 1.5em;
+    }
+    details[open] > summary {
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 1em;
+    }
+</style>
+<h1>ネストされたリストのテスト</h1>
+<p><code>aaa</code> bbb</p>
+<blockquote>
+<p>aaa</p>
+</blockquote>
+<p>aaa</p>
+<p><details><summary>すごく長い文章とかプログラムとか</summary></p>
+<pre><code>print(&#x27;Hello world!&#x27;)
+</code></pre>
+<p></details></p>
+<p><a href="https://qiita.com/matagawa/items/31e26e9cd53c3e61ae07">aaa</a></p>
+<ul>
+<li>親リスト 1  <br>aaa<ul>
+</li>
+<li>子リスト 1-1  <br>bbb<ul>
+</li>
+<li>孫リスト 1-1-1
+</li></ul>
+<li>子リスト 1-2
+</li></ul>
+<li>親リスト 2
+</li>
+<li>親リスト 3<ul>
+</li>
+<li>子リスト 3-1
+</li></ul>
+</li></ul>
+<p>これは通常の段落です。</p>
+<pre><code># コードブロックの背景色が灰色になります
+for i in range(5):
+  print(f&quot;Item {i}&quot;)
+</code></pre>
