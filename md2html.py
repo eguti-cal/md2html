@@ -2,7 +2,9 @@ import argparse
 import re
 import html
 
-# css
+import re
+import html
+
 def get_styling_css():
     return """<style>
     body { 
@@ -48,6 +50,7 @@ def parse_inline(text):
     return text
 
 def markdown_to_html(markdown_text):
+    """リスト内の空行でリストが途切れるバグを修正したパーサー"""
     html_lines = [get_styling_css()]
     lines = markdown_text.strip().split('\n')
 
@@ -89,7 +92,14 @@ def markdown_to_html(markdown_text):
         is_list_continuation = (in_list_block and not is_new_list_item and 
                                 line.strip() and indent > list_stack[-1][0])
 
+        # ▼▼▼ リスト内の空行を許容するための修正 ▼▼▼
+        if in_list_block and not line.strip():
+            # リストブロック内の空行は無視して継続
+            i += 1
+            continue
+        
         if is_new_list_item or is_list_continuation:
+            # (v9のリスト処理ロジックから変更なし)
             if in_blockquote: html_lines.append('</blockquote>'); in_blockquote = False
             if is_new_list_item:
                 content = line_content[content_offset:]
@@ -104,8 +114,7 @@ def markdown_to_html(markdown_text):
                 html_lines.append(f'<li>{parse_inline(content)}')
             elif is_list_continuation:
                 if line_content.startswith('```'):
-                    html_lines.append('<pre><code>'); is_first = True
-                    code_block_indent = indent; i += 1
+                    html_lines.append('<pre><code>'); is_first = True; code_block_indent = indent; i += 1
                     while i < len(lines):
                         code_line = lines[i]
                         if code_line.lstrip().startswith('```'): html_lines.append('</code></pre>'); break
@@ -114,7 +123,7 @@ def markdown_to_html(markdown_text):
                         else: html_lines.append(html.escape(unindented_line))
                         i += 1
                 else: html_lines[-1] += f"<br>{parse_inline(line.strip())}"
-        else:
+        else: # リストではない行
             while list_stack[-1][1] is not None:
                 closed_type = list_stack.pop()[1]; html_lines.append(f"</li></{closed_type}>")
             if in_blockquote and not line.startswith('> '): html_lines.append('</blockquote>'); in_blockquote = False
@@ -125,27 +134,16 @@ def markdown_to_html(markdown_text):
             elif line.lstrip().startswith('> '):
                 if not in_blockquote: html_lines.append('<blockquote>'); in_blockquote = True
                 content = line_content[2:]; html_lines.append(f'<p>{parse_inline(content)}</p>')
-            elif line.strip(): # 空行でない、かつ他のどのブロックでもない -> 段落の開始
-                paragraph_lines = []
-                temp_i = i
+            elif line.strip(): 
+                paragraph_lines = []; temp_i = i
                 while temp_i < len(lines):
-                    p_line = lines[temp_i]
-                    p_line_content = p_line.lstrip()
-                    # 段落の終了条件
-                    if (not p_line.strip() or p_line_content.startswith('- ') or
-                        re.match(r'^\d+\. ', p_line_content) or p_line_content.startswith('#') or
-                        p_line_content.startswith('>') or p_line_content.startswith('```') or
-                        p_line_content.startswith(':::')):
-                        break
-                    paragraph_lines.append(p_line)
-                    temp_i += 1
-                
-                # 収集した段落を<br>で連結して処理
+                    p_line = lines[temp_i]; p_line_content = p_line.lstrip()
+                    if (not p_line.strip() or p_line_content.startswith('- ') or re.match(r'^\d+\. ', p_line_content) or 
+                        p_line_content.startswith('#') or p_line_content.startswith('>') or p_line_content.startswith('```') or
+                        p_line_content.startswith(':::')): break
+                    paragraph_lines.append(p_line); temp_i += 1
                 processed_content = "<br>".join([parse_inline(p.strip()) for p in paragraph_lines])
-                html_lines.append(f"<p>{processed_content}</p>")
-                
-                i = temp_i - 1 # メインループのインデックスを更新
-            # 空行はここでは何もしない（段落の区切りとなる）
+                html_lines.append(f"<p>{processed_content}</p>"); i = temp_i - 1
         i += 1
     
     while list_stack[-1][1] is not None:
